@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baseball Training Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0d1b2a;
+    --navy-mid: #1a2e42;
+    --navy-light: #243d56;
+    --gold: #f5a623;
+    --gold-light: #fbbf4a;
+    --sky: #7ec8e3;
+    --white: #f0f4f8;
+    --gray: #8a9bb0;
+    --success: #4caf7d;
+    --card-bg: #162535;
+    --border: #1f3348;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--navy-mid) 0%, var(--navy) 100%);
+    border-bottom: 3px solid var(--gold);
+    padding: 28px 24px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    border: 30px solid rgba(245,166,35,0.07);
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; right: 60px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    border: 20px solid rgba(126,200,227,0.06);
+  }
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .header-title h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.6rem;
+    letter-spacing: 2px;
+    line-height: 1;
+    color: var(--white);
+  }
+  .header-title h1 span { color: var(--gold); }
+  .header-title p {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--sky);
+    margin-top: 4px;
+  }
+  .positions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .pos-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+  .pos-p { background: var(--gold); color: var(--navy); }
+  .pos-3b { background: var(--sky); color: var(--navy); }
+  .pos-of { background: var(--navy-light); color: var(--white); border: 1px solid var(--gray); }
+
+  .overall-progress {
+    background: var(--navy-light);
+    border-radius: 6px;
+    padding: 12px 16px;
+    min-width: 120px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .overall-progress .pct {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .overall-progress .pct-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-top: 2px;
+  }
+  .overall-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .overall-bar-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* NAV TABS */
+  .tab-nav {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    background: var(--navy-mid);
+    border-bottom: 2px solid var(--border);
+    padding: 0 16px;
+    scrollbar-width: none;
+  }
+  .tab-nav::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 14px 18px 11px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+    margin-bottom: -2px;
+  }
+  .tab-btn:hover { color: var(--white); }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* CONTENT */
+  .content { padding: 20px 16px; max-width: 780px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* WEEK SELECTOR */
+  .week-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .week-bar h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    color: var(--white);
+  }
+  .week-controls { display: flex; align-items: center; gap: 10px; }
+  .week-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--white);
+    width: 32px; height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .week-btn:hover { background: var(--navy-light); }
+  .week-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    color: var(--sky);
+    min-width: 70px;
+    text-align: center;
+  }
+  .reset-btn {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--gray);
+    padding: 5px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover { border-color: #e05555; color: #e05555; }
+
+  /* DAY CARD */
+  .day-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .day-card.completed { border-color: var(--success); }
+
+  .day-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+    gap: 12px;
+  }
+  .day-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    color: var(--gold);
+    min-width: 100px;
+  }
+  .day-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--white);
+    flex: 1;
+  }
+  .day-progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .day-prog-bar {
+    width: 80px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .day-prog-fill {
+    height: 100%;
+    background: var(--success);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+  .day-prog-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.75rem;
+    color: var(--gray);
+    min-width: 36px;
+    text-align: right;
+  }
+  .chevron {
+    color: var(--gray);
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+  }
+  .day-card.open .chevron { transform: rotate(180deg); }
+
+  .day-body { display: none; padding: 0 16px 16px; }
+  .day-card.open .day-body { display: block; }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--sky);
+    margin: 14px 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* CHECKLIST ITEMS */
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(31,51,72,0.5);
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-item:hover { opacity: 0.85; }
+
+  .check-box {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    background: var(--navy);
+  }
+  .check-item.done .check-box {
+    background: var(--success);
+    border-color: var(--success);
+  }
+  .check-box::after {
+    content: '';
+    width: 5px; height: 9px;
+    border: 2px solid white;
+    border-top: none; border-left: none;
+    transform: rotate(45deg) translateY(-1px);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .check-item.done .check-box::after { opacity: 1; }
+
+  .check-text { flex: 1; }
+  .check-name {
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--white);
+    transition: color 0.2s;
+  }
+  .check-item.done .check-name {
+    color: var(--gray);
+    text-decoration: line-through;
+    text-decoration-color: var(--success);
+  }
+  .check-detail {
+    font-size: 0.78rem;
+    color: var(--gray);
+    margin-top: 2px;
+  }
+  .check-sets {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--gold);
+    flex-shrink: 0;
+    margin-top: 2px;
+    min-width: 60px;
+    text-align: right;
+  }
+  .check-item.done .check-sets { color: var(--gray); }
+
+  /* REST DAY */
+  .rest-day {
+    text-align: center;
+    padding: 28px 16px;
+    color: var(--gray);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .rest-icon { font-size: 2rem; margin-bottom: 8px; }
+
+  /* ARM CARE CALLOUT */
+  .arm-care-callout {
+    background: rgba(126,200,227,0.07);
+    border: 1px solid rgba(126,200,227,0.2);
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.82rem;
+    letter-spacing: 1px;
+    color: var(--sky);
+  }
+
+  /* NOTES */
+  .notes-area {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    margin-top: 16px;
+  }
+  .notes-area label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gray);
+    display: block;
+    margin-bottom: 8px;
+  }
+  .notes-area textarea {
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.88rem;
+    resize: vertical;
+    min-height: 60px;
+    outline: none;
+  }
+  .notes-area textarea::placeholder { color: var(--border); }
+
+  /* REFERENCE TAB */
+  .ref-section {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .ref-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .ref-icon {
+    font-size: 1.2rem;
+    width: 32px;
+    text-align: center;
+  }
+  .ref-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    color: var(--white);
+    flex: 1;
+  }
+  .ref-body { display: none; padding: 0 16px 16px; }
+  .ref-section.open .ref-body { display: block; }
+  .ref-section.open .chevron { transform: rotate(180deg); }
+
+  .cue-list { list-style: none; }
+  .cue-list li {
+    padding: 6px 0;
+    font-size: 0.88rem;
+    color: var(--white);
+    border-bottom: 1px solid rgba(31,51,72,0.5);
+    display: flex;
+    gap: 10px;
+  }
+  .cue-list li:last-child { border-bottom: none; }
+  .cue-bullet {
+    color: var(--gold);
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* PROGRESS TAB */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 12px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    line-height: 1;
+    color: var(--gold);
+  }
+  .stat-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-top: 4px;
+  }
+
+  .week-history {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .week-history-header {
+    padding: 14px 16px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    color: var(--gold);
+    border-bottom: 1px solid var(--border);
+  }
+  .week-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(31,51,72,0.5);
+    gap: 12px;
+  }
+  .week-row:last-child { border-bottom: none; }
+  .week-row-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    color: var(--gray);
+    min-width: 60px;
+  }
+  .week-row-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .week-row-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--sky), var(--gold));
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  .week-row-pct {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem;
+    color: var(--white);
+    min-width: 36px;
+    text-align: right;
+  }
+
+  @media (max-width: 480px) {
+    .header-title h1 { font-size: 2rem; }
+    .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .stat-num { font-size: 1.8rem; }
+    .tab-btn { padding: 14px 12px 11px; font-size: 0.78rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="header-title">
+      <h1>TRAINING <span>TRACKER</span></h1>
+      <p>Freshman Prep Program · Age 13</p>
+      <div class="positions">
+        <span class="pos-badge pos-p">Pitcher</span>
+        <span class="pos-badge pos-3b">3rd Base</span>
+        <span class="pos-badge pos-of">Outfield</span>
+      </div>
+    </div>
+    <div class="overall-progress">
+      <div class="pct" id="overallPct">0%</div>
+      <div class="pct-label">This Week</div>
+      <div class="overall-bar">
+        <div class="overall-bar-fill" id="overallBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('week')">This Week</button>
+  <button class="tab-btn" onclick="showTab('armcare')">Arm Care</button>
+  <button class="tab-btn" onclick="showTab('reference')">Cues & Drills</button>
+  <button class="tab-btn" onclick="showTab('progress')">Progress</button>
+</nav>
+
+<!-- ===== WEEK TAB ===== -->
+<div class="content">
+<div id="tab-week" class="tab-panel active">
+  <div class="week-bar">
+    <h2>WEEK <span id="weekNumDisplay">1</span></h2>
+    <div class="week-controls">
+      <button class="week-btn" onclick="changeWeek(-1)">&#8592;</button>
+      <span class="week-label" id="weekLabel">Week 1</span>
+      <button class="week-btn" onclick="changeWeek(1)">&#8594;</button>
+      <button class="reset-btn" onclick="resetWeek()">Reset</button>
+    </div>
+  </div>
+
+  <div id="days-container"></div>
+</div>
+
+<!-- ===== ARM CARE TAB ===== -->
+<div id="tab-armcare" class="tab-panel">
+  <div class="week-bar">
+    <h2>ARM CARE ROUTINE</h2>
+  </div>
+  <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:14px;">
+    <div class="arm-care-callout">
+      ⚠️ Do this before EVERY throwing session. Takes ~8 minutes. Never skip it.
+    </div>
+    <div class="section-label">Warm-Up Sequence</div>
+    <div id="armcare-list"></div>
+    <div class="section-label" style="margin-top:16px;">Then Start Long Toss</div>
+    <div style="font-size:0.88rem;color:var(--gray);line-height:1.6;">
+      Begin at <strong style="color:var(--white);">30 feet</strong>. Work out to 90–120 feet over 8–10 minutes. Never throw hard cold. Once arm feels loose, back in to pitching distance and begin bullpen work.
+    </div>
+  </div>
+  <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:16px;">
+    <div class="section-label">Pitch Count Rules (Follow Every Game)</div>
+    <div id="pitchcount-list"></div>
+  </div>
+</div>
+
+<!-- ===== REFERENCE TAB ===== -->
+<div id="tab-reference" class="tab-panel">
+  <div class="week-bar"><h2>CUES &amp; DRILLS</h2></div>
+  <div id="reference-container"></div>
+</div>
+
+<!-- ===== PROGRESS TAB ===== -->
+<div id="tab-progress" class="tab-panel">
+  <div class="week-bar"><h2>MY PROGRESS</h2></div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-num" id="statWorkouts">0</div>
+      <div class="stat-label">Workouts Done</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statItems">0</div>
+      <div class="stat-label">Items Checked</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statStreak">0</div>
+      <div class="stat-label">Week Streak</div>
+    </div>
+  </div>
+  <div class="week-history">
+    <div class="week-history-header">WEEK BY WEEK</div>
+    <div id="history-container"></div>
+  </div>
+</div>
+</div>
+
+<script>
+// ============================================================
+//  DATA
+// ============================================================
+const DAYS = [
+  {
+    id: 'mon',
+    label: 'Monday',
+    title: 'Lower Body + Core',
+    type: 'strength',
+    sections: [
+      {
+        name: 'Strength Work',
+        items: [
+          { name: 'Goblet Squat', detail: 'Dumbbell — control the descent', sets: '3×10' },
+          { name: 'Romanian Deadlift', detail: 'Dumbbells — hinge at hips, slight knee bend', sets: '3×10' },
+          { name: 'Reverse Lunge', detail: 'Bodyweight or light dumbbells', sets: '3×8 ea.' },
+          { name: 'Single-Leg Glute Bridge', detail: 'Hold top position 1 second each rep', sets: '3×12 ea.' },
+        ]
+      },
+      {
+        name: 'Rotational Core',
+        items: [
+          { name: 'Med Ball Rotational Slam', detail: 'Feet planted — rotate and slam sideways', sets: '3×8 ea.' },
+          { name: 'Dead Bug', detail: 'Lower back stays flat on the floor', sets: '3×8 ea.' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'tue',
+    label: 'Tuesday',
+    title: 'Pitching + Hitting',
+    type: 'baseball',
+    armcare: true,
+    sections: [
+      {
+        name: 'Arm Care First',
+        items: [
+          { name: 'Complete Arm Care Routine', detail: 'See Arm Care tab — do this before any throwing', sets: '8 min' },
+        ]
+      },
+      {
+        name: 'Pitching',
+        items: [
+          { name: 'Long Toss Warm-Up', detail: '30 ft → work out to 90–120 ft over ~10 min', sets: '10 min' },
+          { name: 'Flat Ground Work', detail: 'Focus on ONE mechanical cue — fastball command', sets: '20–25 pitches' },
+          { name: 'Bullpen', detail: 'Mix of fastball and changeup — leave arm feeling good', sets: '30–40 pitches' },
+        ]
+      },
+      {
+        name: 'Hitting',
+        items: [
+          { name: 'Tee Work — Inside', detail: 'Keep hands inside the ball', sets: '10 swings' },
+          { name: 'Tee Work — Middle', detail: 'Drive the ball up the middle', sets: '10 swings' },
+          { name: 'Tee Work — Outside', detail: 'Drive the outside pitch the other way', sets: '10 swings' },
+          { name: 'Front Toss / Soft Toss', detail: 'Focus on timing and contact', sets: '20–30 swings' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'wed',
+    label: 'Wednesday',
+    title: 'Upper Body + Arm Care',
+    type: 'strength',
+    sections: [
+      {
+        name: 'Pulling (Back / Rear Delt)',
+        items: [
+          { name: 'Pull-Ups', detail: 'Band-assisted if needed — full range of motion', sets: '3×max' },
+          { name: 'Dumbbell Row', detail: 'Brace on knee — pull elbow back, not out', sets: '3×10 ea.' },
+        ]
+      },
+      {
+        name: 'Pressing',
+        items: [
+          { name: 'Dumbbell Floor Press', detail: 'Pause at bottom, controlled press', sets: '3×10' },
+        ]
+      },
+      {
+        name: 'Shoulder Health (Non-Negotiable)',
+        items: [
+          { name: 'Band Face Pull', detail: 'Pull to forehead — external rotation at the end', sets: '3×15' },
+          { name: 'Band External Rotation', detail: 'Elbow at side, rotate out slowly', sets: '3×15 ea.' },
+          { name: 'Y-T-W Raises', detail: 'Light dumbbells or bodyweight — slow and controlled', sets: '2×10 ea.' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'thu',
+    label: 'Thursday',
+    title: 'Fielding Drills',
+    type: 'baseball',
+    sections: [
+      {
+        name: 'Third Base',
+        items: [
+          { name: 'Short Hop Repetition', detail: 'Bounce throws from 15 ft — glove low, two hands', sets: '25–30 reps' },
+          { name: 'Slow Roller Charge', detail: 'Charge ball, barehanded or glove, plant and fire to first', sets: '10 reps' },
+          { name: 'Backhand Drill', detail: 'Toss to backhand side — plant right foot, throw', sets: '10–15 reps' },
+        ]
+      },
+      {
+        name: 'Outfield',
+        items: [
+          { name: 'Drop Step Reaction', detail: 'React to a left/right signal — drop step immediately', sets: '10 ea. side' },
+          { name: 'Over-the-Shoulder Catches', detail: 'Run under fly balls both left and right', sets: '10 reps' },
+          { name: 'Charge-and-Throw (Do-or-Die)', detail: 'Charge ball, crow hop, fire to cutoff or plate', sets: '8–10 reps' },
+        ]
+      },
+      {
+        name: 'Hitting',
+        items: [
+          { name: 'Soft Toss / Front Toss', detail: 'Focus on mechanics — let hips clear before hands', sets: '20–30 swings' },
+          { name: 'One-Hand Drills', detail: 'Bottom hand only, then top hand only into tee', sets: '10 ea.' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'fri',
+    label: 'Friday',
+    title: 'Full Body + Core',
+    type: 'strength',
+    sections: [
+      {
+        name: 'Strength Work',
+        items: [
+          { name: 'Dumbbell Deadlift', detail: 'Hinge at hips — bar path stays close to legs', sets: '3×10' },
+          { name: 'Step-Up', detail: 'Dumbbell in each hand — drive through the heel', sets: '3×8 ea.' },
+          { name: 'Dumbbell Push Press', detail: 'Slight dip and drive — use legs to start the press', sets: '3×8' },
+          { name: 'Dumbbell Row', detail: 'Chest-supported or braced on knee', sets: '3×10' },
+        ]
+      },
+      {
+        name: 'Explosive + Core',
+        items: [
+          { name: 'Med Ball Chest Pass (into wall)', detail: 'Load and explode — reset each rep', sets: '3×8' },
+          { name: 'Pallof Press (band)', detail: 'Band anchored at chest height — resist rotation', sets: '3×10 ea.' },
+          { name: 'Plank', detail: 'Squeeze glutes and abs — no sagging hips', sets: '3×40 sec' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'sat',
+    label: 'Saturday',
+    title: 'Long Toss + Full Reps',
+    type: 'baseball',
+    armcare: true,
+    sections: [
+      {
+        name: 'Arm Care + Throwing',
+        items: [
+          { name: 'Complete Arm Care Routine', detail: 'See Arm Care tab — every session, no exceptions', sets: '8 min' },
+          { name: 'Long Toss — Build Out', detail: 'Work to max comfortable distance (90–150 ft)', sets: '15 min' },
+          { name: 'Pull Down (back to mound distance)', detail: 'After long toss, work back in and let it fly', sets: '10–15 throws' },
+        ]
+      },
+      {
+        name: 'Live BP or Hitting',
+        items: [
+          { name: 'Live Pitching or Front Toss BP', detail: 'Read pitches — work counts, not just hacks', sets: '30–40 swings' },
+        ]
+      },
+      {
+        name: 'Full Fielding',
+        items: [
+          { name: 'Ground Balls — 3B', detail: 'Routine, backhand, slow roller — all three shapes', sets: '20 reps' },
+          { name: 'Fly Balls — Outfield', detail: 'Drop steps, crossovers, coming in on liners', sets: '15 reps' },
+          { name: 'Cutoff Throws from OF', detail: 'Hit the cutoff man — accuracy first, carry second', sets: '8–10 reps' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'sun',
+    label: 'Sunday',
+    title: 'Rest',
+    type: 'rest'
+  }
+];
+
+const ARM_CARE = [
+  { name: 'Arm Circles', detail: 'Forward and backward', sets: '10 ea. dir.' },
+  { name: 'Band Pull-Aparts', detail: 'Arms straight, pull band to chest', sets: '2×15' },
+  { name: 'Band External Rotation', detail: 'Elbow tucked at side — slow rotation out', sets: '2×15 ea.' },
+  { name: 'Band W\'s', detail: 'Pull band to "W" shape — squeeze shoulder blades', sets: '2×12' },
+  { name: 'Light Dumbbell Y-T-W', detail: 'Lying face down or standing hinged — very light weight', sets: '1×10 ea.' },
+  { name: 'Wrist Flexor Stretch', detail: 'Arm straight, pull fingers back gently', sets: '30 sec ea.' },
+  { name: 'Wrist Extensor Stretch', detail: 'Arm straight, push fingers down gently', sets: '30 sec ea.' },
+];
+
+const PITCH_COUNT = [
+  { name: '1–20 pitches', detail: '0 days rest required' },
+  { name: '21–35 pitches', detail: '1 day rest required' },
+  { name: '36–50 pitches', detail: '2 days rest required' },
+  { name: '51–65 pitches', detail: '3 days rest required' },
+  { name: '66+ pitches', detail: '4 days rest required (max 85 pitches/game at age 13)' },
+];
+
+const REFERENCE = [
+  {
+    icon: '⚾',
+    title: 'Pitching Mechanics Cues',
+    items: [
+      'Lift knee to hip height — pause and balance before driving',
+      'Hips open FIRST, then shoulders follow — don\'t rush the upper body',
+      'Stride foot lands slightly closed, pointing toward home plate',
+      'Elbow at or below shoulder going up — never an "inverted W"',
+      'Get to high-cock position as front foot lands — timing is everything',
+      'Release point out front — throw THROUGH the target',
+      'Throwing arm finishes across the body and down — protect the arm',
+      'Glove side tucks in — don\'t let it fly out and pull the shoulder open',
+    ]
+  },
+  {
+    icon: '🔁',
+    title: 'Pitching Drills',
+    items: [
+      'Knee Drill: Throw from kneeling (throwing knee down) — 15–20 throws at 30–40 ft. Forces upper body and core.',
+      'Balance Point Hold: Lift to balance, hold 3 seconds, then deliver. Builds repeatable mechanics.',
+      'Command Drill: Pick a corner of the zone. Throw 10 fastballs at it. Track how many hit.',
+      'Changeup Feel: Throw changeups at 40 ft focusing on SAME arm speed as fastball.',
+    ]
+  },
+  {
+    icon: '🧤',
+    title: 'Third Base Cues',
+    items: [
+      'Glove starts LOW and out front — easier to come up than go down',
+      'Weight on balls of feet — ready to explode in any direction',
+      'CHARGE slow rollers — hesitation gives the runner the base',
+      'Field the ball between your feet, slightly left of center',
+      'Two hands when possible — glove opens the door, bare hand closes it',
+      'Shuffle-and-throw in rhythm — don\'t rush, let the footwork do the work',
+      'Four-seam grip on every throw — spin matters on the long throw to first',
+    ]
+  },
+  {
+    icon: '🏃',
+    title: 'Outfield Cues',
+    items: [
+      'DROP STEP first on anything over your head — never backpedal straight',
+      'Crossover and run to the SPOT, not to the ball\'s current position',
+      'Come in aggressive on sinking liners — keep it in front of you',
+      'Crow hop before EVERY throw — even short ones. Make it a habit.',
+      'Hit the cutoff man unless you have a clear shot — skipping him costs bases',
+      'Aim slightly above cutoff\'s glove — ball tails down in flight',
+      'Track with your eyes, run with your legs — don\'t watch and drift',
+    ]
+  },
+  {
+    icon: '🏏',
+    title: 'Hitting Cues',
+    items: [
+      'Relax the grip — death grip kills bat speed',
+      'Small stride landing on ball of foot — it\'s a timing move, not a power move',
+      'Hands STAY BACK while front foot strides — most common mistake at 13',
+      'Hips clear, then hands — let the barrel come through the zone',
+      'Slight downward swing path creates backspin and line drives',
+      'Extension through contact — think up the middle first, pull comes naturally',
+      'Finish above the front shoulder — rolling over means the barrel died early',
+    ]
+  },
+];
+
+// ============================================================
+//  STATE
+// ============================================================
+let currentWeek = 1;
+
+function storageKey(week, dayId, itemIdx, sectionIdx) {
+  return `tracker_w${week}_${dayId}_s${sectionIdx}_i${itemIdx}`;
+}
+function armCareKey(idx) { return `armcare_${idx}`; }
+function notesKey(week, dayId) { return `notes_w${week}_${dayId}`; }
+function weekCompletedKey(week) { return `weekCompleted_w${week}`; }
+
+function getChecked(key) { return localStorage.getItem(key) === '1'; }
+function setChecked(key, val) { localStorage.setItem(key, val ? '1' : '0'); }
+
+// ============================================================
+//  RENDER WEEK
+// ============================================================
+function renderWeek() {
+  const container = document.getElementById('days-container');
+  container.innerHTML = '';
+
+  DAYS.forEach(day => {
+    const card = document.createElement('div');
+    card.className = 'day-card';
+    card.id = `card-${day.id}`;
+
+    if (day.type === 'rest') {
+      card.innerHTML = `
+        <div class="day-header" style="cursor:default;">
+          <span class="day-label">${day.label.toUpperCase()}</span>
+          <span class="day-title" style="color:var(--gray);">${day.title}</span>
+        </div>
+        <div class="rest-day">
+          <div class="rest-icon">😴</div>
+          Sleep. Recover. Grow stronger.
+        </div>`;
+      container.appendChild(card);
+      return;
+    }
+
+    // Count items
+    let total = 0, done = 0;
+    day.sections.forEach((sec, si) => {
+      sec.items.forEach((item, ii) => {
+        total++;
+        if (getChecked(storageKey(currentWeek, day.id, ii, si))) done++;
+      });
+    });
+
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const isComplete = done === total && total > 0;
+    if (isComplete) card.classList.add('completed');
+
+    const header = document.createElement('div');
+    header.className = 'day-header';
+    header.innerHTML = `
+      <span class="day-label">${day.label.toUpperCase()}</span>
+      <span class="day-title">${day.title}</span>
+      <div class="day-progress-wrap">
+        <div class="day-prog-bar"><div class="day-prog-fill" style="width:${pct}%"></div></div>
+        <span class="day-prog-text">${done}/${total}</span>
+      </div>
+      <span class="chevron">▾</span>`;
+    header.onclick = () => {
+      card.classList.toggle('open');
+    };
+    card.appendChild(header);
+
+    const body = document.createElement('div');
+    body.className = 'day-body';
+
+    if (day.armcare) {
+      body.innerHTML += `<div class="arm-care-callout">⚾ Complete Arm Care Routine before throwing — see Arm Care tab</div>`;
+    }
+
+    day.sections.forEach((sec, si) => {
+      const secLabel = document.createElement('div');
+      secLabel.className = 'section-label';
+      secLabel.textContent = sec.name;
+      body.appendChild(secLabel);
+
+      sec.items.forEach((item, ii) => {
+        const key = storageKey(currentWeek, day.id, ii, si);
+        const checked = getChecked(key);
+        const el = document.createElement('div');
+        el.className = `check-item${checked ? ' done' : ''}`;
+        el.innerHTML = `
+          <div class="check-box"></div>
+          <div class="check-text">
+            <div class="check-name">${item.name}</div>
+            <div class="check-detail">${item.detail}</div>
+          </div>
+          <div class="check-sets">${item.sets}</div>`;
+        el.onclick = () => {
+          const nowChecked = !el.classList.contains('done');
+          setChecked(key, nowChecked);
+          el.classList.toggle('done', nowChecked);
+          updateDayProgress(day);
+          updateOverall();
+          updateProgressTab();
+        };
+        body.appendChild(el);
+      });
+    });
+
+    // Notes
+    const notesDiv = document.createElement('div');
+    notesDiv.className = 'notes-area';
+    const notesVal = localStorage.getItem(notesKey(currentWeek, day.id)) || '';
+    notesDiv.innerHTML = `<label>Notes for this session</label><textarea placeholder="How'd it go? Weight used? Something to work on...">${notesVal}</textarea>`;
+    notesDiv.querySelector('textarea').oninput = (e) => {
+      localStorage.setItem(notesKey(currentWeek, day.id), e.target.value);
+    };
+    body.appendChild(notesDiv);
+
+    card.appendChild(body);
+    container.appendChild(card);
+  });
+
+  updateOverall();
+  document.getElementById('weekNumDisplay').textContent = currentWeek;
+  document.getElementById('weekLabel').textContent = `Week ${currentWeek}`;
+}
+
+function updateDayProgress(day) {
+  let total = 0, done = 0;
+  day.sections.forEach((sec, si) => {
+    sec.items.forEach((item, ii) => {
+      total++;
+      if (getChecked(storageKey(currentWeek, day.id, ii, si))) done++;
+    });
+  });
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const card = document.getElementById(`card-${day.id}`);
+  if (!card) return;
+  const fill = card.querySelector('.day-prog-fill');
+  const text = card.querySelector('.day-prog-text');
+  if (fill) fill.style.width = pct + '%';
+  if (text) text.textContent = `${done}/${total}`;
+  card.classList.toggle('completed', done === total && total > 0);
+}
+
+function updateOverall() {
+  let total = 0, done = 0;
+  DAYS.forEach(day => {
+    if (day.type === 'rest') return;
+    day.sections.forEach((sec, si) => {
+      sec.items.forEach((item, ii) => {
+        total++;
+        if (getChecked(storageKey(currentWeek, day.id, ii, si))) done++;
+      });
+    });
+  });
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById('overallPct').textContent = pct + '%';
+  document.getElementById('overallBar').style.width = pct + '%';
+
+  // Save week completion snapshot
+  localStorage.setItem(weekCompletedKey(currentWeek), JSON.stringify({ done, total, pct }));
+}
+
+// ============================================================
+//  ARM CARE TAB
+// ============================================================
+function renderArmCare() {
+  const list = document.getElementById('armcare-list');
+  ARM_CARE.forEach((item, idx) => {
+    const key = armCareKey(idx);
+    const checked = getChecked(key);
+    const el = document.createElement('div');
+    el.className = `check-item${checked ? ' done' : ''}`;
+    el.innerHTML = `
+      <div class="check-box"></div>
+      <div class="check-text">
+        <div class="check-name">${item.name}</div>
+        <div class="check-detail">${item.detail}</div>
+      </div>
+      <div class="check-sets">${item.sets}</div>`;
+    el.onclick = () => {
+      const nowChecked = !el.classList.contains('done');
+      setChecked(key, nowChecked);
+      el.classList.toggle('done', nowChecked);
+    };
+    list.appendChild(el);
+  });
+
+  const pcList = document.getElementById('pitchcount-list');
+  PITCH_COUNT.forEach(item => {
+    const el = document.createElement('div');
+    el.style.cssText = 'padding:8px 0;border-bottom:1px solid rgba(31,51,72,0.5);display:flex;gap:12px;align-items:flex-start;';
+    el.innerHTML = `
+      <span style="color:var(--gold);font-family:'Barlow Condensed',sans-serif;font-weight:700;min-width:100px;font-size:0.88rem;">${item.name}</span>
+      <span style="font-size:0.85rem;color:var(--gray);">${item.detail}</span>`;
+    pcList.appendChild(el);
+  });
+}
+
+// ============================================================
+//  REFERENCE TAB
+// ============================================================
+function renderReference() {
+  const container = document.getElementById('reference-container');
+  REFERENCE.forEach(section => {
+    const div = document.createElement('div');
+    div.className = 'ref-section';
+    div.innerHTML = `
+      <div class="ref-header" onclick="this.parentElement.classList.toggle('open')">
+        <span class="ref-icon">${section.icon}</span>
+        <span class="ref-title">${section.title}</span>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="ref-body">
+        <ul class="cue-list">
+          ${section.items.map(item => `<li><span class="cue-bullet">›</span>${item}</li>`).join('')}
+        </ul>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+// ============================================================
+//  PROGRESS TAB
+// ============================================================
+function updateProgressTab() {
+  // Total items checked across all weeks
+  let totalChecked = 0;
+  let weeksWithData = 0;
+  let streak = 0;
+
+  for (let w = 1; w <= 52; w++) {
+    const snap = localStorage.getItem(weekCompletedKey(w));
+    if (snap) {
+      const { done } = JSON.parse(snap);
+      totalChecked += done;
+      if (done > 0) {
+        weeksWithData++;
+        streak = w; // rough streak
+      }
+    }
+  }
+
+  // Workouts done = days with at least 1 item checked across all weeks
+  let workoutsDone = 0;
+  for (let w = 1; w <= 52; w++) {
+    DAYS.forEach(day => {
+      if (day.type === 'rest') return;
+      let dayDone = false;
+      day.sections.forEach((sec, si) => {
+        sec.items.forEach((item, ii) => {
+          if (getChecked(storageKey(w, day.id, ii, si))) dayDone = true;
+        });
+      });
+      if (dayDone) workoutsDone++;
+    });
+  }
+
+  document.getElementById('statWorkouts').textContent = workoutsDone;
+  document.getElementById('statItems').textContent = totalChecked;
+  document.getElementById('statStreak').textContent = weeksWithData;
+
+  // Week history
+  const hist = document.getElementById('history-container');
+  hist.innerHTML = '';
+  let hasAny = false;
+  for (let w = 1; w <= 52; w++) {
+    const snap = localStorage.getItem(weekCompletedKey(w));
+    if (!snap) continue;
+    hasAny = true;
+    const { done, total, pct } = JSON.parse(snap);
+    const row = document.createElement('div');
+    row.className = 'week-row';
+    row.innerHTML = `
+      <span class="week-row-label">Week ${w}</span>
+      <div class="week-row-bar"><div class="week-row-fill" style="width:${pct}%"></div></div>
+      <span class="week-row-pct">${pct}%</span>`;
+    hist.appendChild(row);
+  }
+  if (!hasAny) {
+    hist.innerHTML = '<div style="padding:20px 16px;color:var(--gray);font-family:\'Barlow Condensed\',sans-serif;font-size:0.9rem;letter-spacing:1px;">Complete some workouts to see history here.</div>';
+  }
+}
+
+// ============================================================
+//  WEEK NAV
+// ============================================================
+function changeWeek(delta) {
+  currentWeek = Math.max(1, Math.min(52, currentWeek + delta));
+  renderWeek();
+  updateProgressTab();
+}
+
+function resetWeek() {
+  if (!confirm(`Reset all checkboxes for Week ${currentWeek}?`)) return;
+  DAYS.forEach(day => {
+    if (day.type === 'rest') return;
+    day.sections.forEach((sec, si) => {
+      sec.items.forEach((item, ii) => {
+        localStorage.removeItem(storageKey(currentWeek, day.id, ii, si));
+      });
+    });
+    localStorage.removeItem(notesKey(currentWeek, day.id));
+  });
+  localStorage.removeItem(weekCompletedKey(currentWeek));
+  renderWeek();
+  updateProgressTab();
+}
+
+// ============================================================
+//  TABS
+// ============================================================
+function showTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tab-${id}`).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'progress') updateProgressTab();
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+renderWeek();
+renderArmCare();
+renderReference();
+updateProgressTab();
+</script>
+</body>
+</html>
